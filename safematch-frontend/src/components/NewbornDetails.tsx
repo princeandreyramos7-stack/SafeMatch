@@ -287,9 +287,13 @@ export default function NewbornDetails({ newbornId, onClose }: NewbornDetailsPro
             <div className="p-6 text-center">
               <div className="bg-white border-2 border-gray-200 rounded-lg p-4 inline-block">
                 <img
-                  src={`${import.meta.env.VITE_API_URL}/api/qr-codes/${newborn.qr_code.id}/image`}
+                  src={`${import.meta.env.VITE_BASE_URL}/api/qr-codes/${newborn.qr_code.id}/image`}
                   alt="QR Code"
                   className="w-64 h-64"
+                  onError={(e) => {
+                    console.error('QR image failed to load');
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               </div>
 

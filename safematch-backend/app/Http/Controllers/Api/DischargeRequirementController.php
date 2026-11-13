@@ -20,9 +20,9 @@ class DischargeRequirementController extends Controller
             $query->where('is_active', $request->is_active);
         }
 
-        // Filter by applies_to
-        if ($request->has('applies_to')) {
-            $query->where('applies_to', $request->applies_to);
+        // Filter by requirement_type
+        if ($request->has('requirement_type')) {
+            $query->where('requirement_type', $request->requirement_type);
         }
 
         // Search
@@ -34,7 +34,7 @@ class DischargeRequirementController extends Controller
             });
         }
 
-        $requirements = $query->orderBy('applies_to')->orderBy('name')->get();
+        $requirements = $query->orderBy('requirement_type')->orderBy('display_order')->orderBy('name')->get();
 
         return response()->json($requirements);
     }
@@ -46,10 +46,11 @@ class DischargeRequirementController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
+            'requirement_type' => 'required|in:maternal,newborn',
             'description' => 'nullable|string',
-            'applies_to' => 'required|in:mother,newborn,both',
-            'is_mandatory' => 'boolean',
+            'is_required' => 'boolean',
             'is_active' => 'boolean',
+            'display_order' => 'nullable|integer',
         ]);
 
         $requirement = DischargeRequirement::create($validated);
@@ -75,10 +76,11 @@ class DischargeRequirementController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:100',
+            'requirement_type' => 'sometimes|required|in:maternal,newborn',
             'description' => 'nullable|string',
-            'applies_to' => 'sometimes|required|in:mother,newborn,both',
-            'is_mandatory' => 'boolean',
+            'is_required' => 'boolean',
             'is_active' => 'boolean',
+            'display_order' => 'nullable|integer',
         ]);
 
         $requirement->update($validated);

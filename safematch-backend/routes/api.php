@@ -9,6 +9,9 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
+// Public QR Code Image (no auth required for display)
+Route::get('qr-codes/{id}/image', [App\Http\Controllers\Api\QRCodeController::class, 'image']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Dashboard
@@ -41,7 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('qr-codes/generate', [App\Http\Controllers\Api\QRCodeController::class, 'generate']);
     Route::post('qr-codes/revoke', [App\Http\Controllers\Api\QRCodeController::class, 'revoke']);
     Route::get('qr-codes/{id}/download', [App\Http\Controllers\Api\QRCodeController::class, 'download']);
-    Route::get('qr-codes/{id}/image', [App\Http\Controllers\Api\QRCodeController::class, 'image']);
+    // Note: qr-codes/{id}/image is public (defined outside auth middleware)
 
     // QR Verification
     Route::post('qr-verification/verify-single', [App\Http\Controllers\Api\QRVerificationController::class, 'verifySingle']);

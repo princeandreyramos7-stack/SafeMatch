@@ -93,7 +93,7 @@ class NewbornScreeningController extends Controller
             'newborn_id' => 'required|exists:newborns,id',
             'screening_type_id' => 'required|exists:newborn_screening_types,id',
             'performed_date' => 'required|date',
-            'status' => 'required|in:pending,performed,completed,requires_followup',
+            'status' => 'required|in:pending,scheduled,in_progress,completed,not_applicable,requires_followup',
             'result' => 'nullable|in:passed,failed,inconclusive,pending',
             'remarks' => 'nullable|string',
         ]);
@@ -142,7 +142,7 @@ class NewbornScreeningController extends Controller
         $validated = $request->validate([
             'screening_type_id' => 'sometimes|required|exists:newborn_screening_types,id',
             'performed_date' => 'sometimes|required|date',
-            'status' => 'sometimes|required|in:pending,performed,completed,requires_followup',
+            'status' => 'sometimes|required|in:pending,scheduled,in_progress,completed,not_applicable,requires_followup',
             'result' => 'nullable|in:passed,failed,inconclusive,pending',
             'remarks' => 'nullable|string',
         ]);
@@ -201,8 +201,10 @@ class NewbornScreeningController extends Controller
             'total_screenings' => NewbornScreening::count(),
             'by_status' => [
                 'pending' => NewbornScreening::where('status', 'pending')->count(),
-                'performed' => NewbornScreening::where('status', 'performed')->count(),
+                'scheduled' => NewbornScreening::where('status', 'scheduled')->count(),
+                'in_progress' => NewbornScreening::where('status', 'in_progress')->count(),
                 'completed' => NewbornScreening::where('status', 'completed')->count(),
+                'not_applicable' => NewbornScreening::where('status', 'not_applicable')->count(),
                 'requires_followup' => NewbornScreening::where('status', 'requires_followup')->count(),
             ],
             'by_result' => [

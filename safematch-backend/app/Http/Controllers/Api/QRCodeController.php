@@ -52,19 +52,27 @@ class QRCodeController extends Controller
         $token = Str::random(64);
         $tokenHash = hash('sha256', $token);
 
-        // Generate QR code image
+        // Generate QR code data as URL (scannable by any QR app)
+        // This creates a verification URL that can be opened in any browser
+        $verificationUrl = config('app.frontend_url', 'http://localhost:5173') . 
+                          '/verify?code=' . $code . 
+                          '&token=' . $token . 
+                          '&type=' . $validated['type'];
+
+        // Also keep JSON data for backward compatibility
         $qrData = json_encode([
+            'url' => $verificationUrl,
             'code' => $code,
             'token' => $token,
             'type' => $validated['type'],
             'id' => $model->{$validated['type'] === 'mother' ? 'mother_id' : 'newborn_id'},
         ]);
 
-        // Generate QR image
+        // Generate QR image as PNG with the URL (universal support)
         $qrImage = QrCodeGenerator::format('png')
             ->size(300)
             ->margin(1)
-            ->generate($qrData);
+            ->generate($verificationUrl); // Use URL instead of JSON
 
         // Save to storage
         $filename = $code . '_' . time() . '.png';
@@ -163,7 +171,15 @@ class QRCodeController extends Controller
         }
 
         $image = Storage::disk('public')->get($qrCode->image_path);
-        return response($image)->header('Content-Type', 'image/png');
+        
+        // Determine content type based on file extension
+        $extension = pathinfo($qrCode->image_path, PATHINFO_EXTENSION);
+        $contentType = $extension === 'svg' ? 'image/svg+xml' : 'image/png';
+        
+        return response($image)
+            ->header('Content-Type', $contentType)
+            ->header('Cache-Control', 'public, max-age=3600')
+            ->header('Access-Control-Allow-Origin', '*');
     }
 
     /**

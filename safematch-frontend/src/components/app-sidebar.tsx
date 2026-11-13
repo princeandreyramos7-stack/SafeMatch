@@ -9,6 +9,8 @@ import {
   LogOut,
   ChevronUp,
   User2,
+  Activity,
+  Shield,
 } from "lucide-react"
 
 import {
@@ -64,6 +66,17 @@ const items = [
     url: "/discharge",
     icon: FileText,
   },
+  {
+    title: "Activity Logs",
+    url: "/activity-logs",
+    icon: Activity,
+  },
+  {
+    title: "Users",
+    url: "/users",
+    icon: Shield,
+    adminOnly: true,
+  },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -109,19 +122,26 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <a
-                      href={item.url}
-                      className="flex items-center gap-3 text-teal-100 hover:text-white hover:bg-teal-800"
-                    >
-                      <item.icon className="size-4" />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                // Hide admin-only items for non-admin users
+                if (item.adminOnly && user?.role !== 'administrator') {
+                  return null;
+                }
+                
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <a
+                        href={item.url}
+                        className="flex items-center gap-3 text-teal-100 hover:text-white hover:bg-teal-800"
+                      >
+                        <item.icon className="size-4" />
+                        <span>{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

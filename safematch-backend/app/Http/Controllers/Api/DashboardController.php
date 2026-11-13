@@ -307,18 +307,6 @@ class DashboardController extends Controller
             ];
         }
         
-        // Pending screenings
-        $pendingScreenings = NewbornScreening::where('status', 'pending')->count();
-        if ($pendingScreenings > 0) {
-            $alerts[] = [
-                'type' => 'warning',
-                'title' => 'Pending Screenings',
-                'message' => "{$pendingScreenings} newborn screening(s) pending",
-                'count' => $pendingScreenings,
-                'link' => '/screenings',
-            ];
-        }
-        
         // Screenings requiring followup
         $followupCount = NewbornScreening::where('status', 'requires_followup')->count();
         if ($followupCount > 0) {

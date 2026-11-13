@@ -15,9 +15,10 @@ export default function DischargeRequirementsModal({ onClose, onSuccess }: Disch
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    applies_to: 'both',
-    is_mandatory: true,
+    requirement_type: 'maternal',
+    is_required: true,
     is_active: true,
+    display_order: 0,
   });
   const [errors, setErrors] = useState<any>({});
 
@@ -42,9 +43,10 @@ export default function DischargeRequirementsModal({ onClose, onSuccess }: Disch
     setFormData({
       name: '',
       description: '',
-      applies_to: 'both',
-      is_mandatory: true,
+      requirement_type: 'maternal',
+      is_required: true,
       is_active: true,
+      display_order: 0,
     });
     setErrors({});
     setShowForm(true);
@@ -55,9 +57,10 @@ export default function DischargeRequirementsModal({ onClose, onSuccess }: Disch
     setFormData({
       name: requirement.name,
       description: requirement.description || '',
-      applies_to: requirement.applies_to,
-      is_mandatory: requirement.is_mandatory,
+      requirement_type: requirement.requirement_type,
+      is_required: requirement.is_required,
       is_active: requirement.is_active,
+      display_order: requirement.display_order || 0,
     });
     setErrors({});
     setShowForm(true);
@@ -148,15 +151,14 @@ export default function DischargeRequirementsModal({ onClose, onSuccess }: Disch
                         <div className="flex items-center gap-3">
                           <h3 className="text-lg font-semibold text-gray-900">{req.name}</h3>
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                            req.applies_to === 'mother' ? 'bg-pink-100 text-pink-800' :
-                            req.applies_to === 'newborn' ? 'bg-blue-100 text-blue-800' :
-                            'bg-purple-100 text-purple-800'
+                            req.requirement_type === 'maternal' ? 'bg-pink-100 text-pink-800' :
+                            'bg-blue-100 text-blue-800'
                           }`}>
-                            {req.applies_to}
+                            {req.requirement_type === 'maternal' ? 'Mother' : 'Newborn'}
                           </span>
-                          {req.is_mandatory && (
+                          {req.is_required && (
                             <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                              Mandatory
+                              Required
                             </span>
                           )}
                           {req.is_active ? (
@@ -237,27 +239,26 @@ export default function DischargeRequirementsModal({ onClose, onSuccess }: Disch
                   Applies To <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={formData.applies_to}
-                  onChange={(e) => setFormData({ ...formData, applies_to: e.target.value })}
+                  value={formData.requirement_type}
+                  onChange={(e) => setFormData({ ...formData, requirement_type: e.target.value })}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
-                  <option value="mother">Mother Only</option>
+                  <option value="maternal">Mother Only</option>
                   <option value="newborn">Newborn Only</option>
-                  <option value="both">Both Mother & Newborn</option>
                 </select>
-                {errors.applies_to && <p className="mt-1 text-sm text-red-600">{errors.applies_to[0]}</p>}
+                {errors.requirement_type && <p className="mt-1 text-sm text-red-600">{errors.requirement_type[0]}</p>}
               </div>
 
               <div className="flex items-center gap-6">
                 <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={formData.is_mandatory}
-                    onChange={(e) => setFormData({ ...formData, is_mandatory: e.target.checked })}
+                    checked={formData.is_required}
+                    onChange={(e) => setFormData({ ...formData, is_required: e.target.checked })}
                     className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
                   />
-                  <span className="text-sm font-medium text-gray-700">Mandatory Requirement</span>
+                  <span className="text-sm font-medium text-gray-700">Required Requirement</span>
                 </label>
 
                 <label className="flex items-center gap-2">

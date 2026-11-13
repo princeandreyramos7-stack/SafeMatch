@@ -8,7 +8,8 @@ import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Mothers from './pages/Mothers';
 import Newborns from './pages/Newborns';
-import QRVerificationMobile from './pages/QRVerificationMobile';
+import QRVerification from './pages/QRVerification';
+import PublicVerify from './pages/PublicVerify';
 import Screenings from './pages/Screenings';
 import MaternalAssessments from './pages/MaternalAssessments';
 import Discharge from './pages/Discharge';
@@ -47,6 +48,9 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           
+          {/* Public QR Verification Route - No Authentication Required */}
+          <Route path="/verify" element={<PublicVerify />} />
+          
           <Route
             path="/*"
             element={
@@ -57,7 +61,7 @@ function App() {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/mothers" element={<Mothers />} />
                     <Route path="/newborns" element={<Newborns />} />
-                    <Route path="/qr-verification" element={<QRVerificationMobile />} />
+                    <Route path="/qr-verification" element={<QRVerification />} />
                     <Route path="/screenings" element={<Screenings />} />
                     <Route path="/maternal-assessments" element={<MaternalAssessments />} />
                     <Route path="/discharge" element={<Discharge />} />

@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../lib/axios';
-import { Camera, CheckCircle2, XCircle, AlertTriangle, History, BarChart3 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { CheckCircle2, XCircle, AlertTriangle, BarChart3, RefreshCw, QrCode, Users, Baby } from 'lucide-react';
 import QRScanner from '../components/QRScanner';
 import { format } from 'date-fns';
 
 export default function QRVerification() {
-  const [mode, setMode] = useState<'single' | 'pairing'>('pairing');
   const [step, setStep] = useState<'mother' | 'newborn' | 'result'>('mother');
-  const [motherQRData, setMotherQRData] = useState<string | null>(null);
-  const [newbornQRData, setNewbornQRData] = useState<string | null>(null);
+  const [motherQRData, setMotherQRData] = useState<any>(null);
+  const [newbornQRData, setNewbornQRData] = useState<any>(null);
   const [verificationResult, setVerificationResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
-  const [history, setHistory] = useState<any[]>([]);
   const [statistics, setStatistics] = useState<any>(null);
 
   useEffect(() => {
@@ -28,61 +26,157 @@ export default function QRVerification() {
     }
   };
 
-  const fetchHistory = async () => {
+  const handleMotherScan = (data: string) => {
     try {
-      const response = await axios.get('/qr-verification/history');
-      setHistory(response.data.data || []);
+      const qrData = JSON.parse(data);
+      console.log('Mother QR Data:', qrData);
+      
+      if (qrData.type !== 'mother') {
+        // Detect if it's a newborn QR code
+        if (qrData.type === 'newborn') {
+          toast.error('⚠️ Newborn QR Detected! You scanned a NEWBORN QR code. Please scan a MOTHER QR code in this scanner.', { 
+            duration: 5000,
+            style: {
+              background: '#fef3c7',
+              color: '#92400e',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              padding: '16px',
+              border: '2px solid #f59e0b',
+            },
+            icon: '👶',
+          });
+        } else {
+          toast.error('⚠️ Wrong QR Code! This is NOT a Mother QR code. Please scan a Mother QR code.', { 
+            duration: 4000,
+            style: {
+              background: '#fee2e2',
+              color: '#991b1b',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              padding: '16px',
+            },
+            icon: '🚫',
+          });
+        }
+        return;
+      }
+      
+      setMotherQRData(qrData);
+      setStep('newborn');
+      toast.success('✅ Mother QR Code Scanned Successfully!', { 
+        icon: '👩',
+        duration: 3000,
+        style: {
+          background: '#d1fae5',
+          color: '#065f46',
+          fontWeight: 'bold',
+          fontSize: '16px',
+          padding: '16px',
+        },
+      });
     } catch (error) {
-      console.error('Error fetching history:', error);
+      toast.error('❌ Invalid QR code format. Please scan a valid SafeMatch QR code.', {
+        duration: 3000,
+        style: {
+          background: '#fee2e2',
+          color: '#991b1b',
+        },
+      });
     }
   };
 
-  const handleMotherScan = (data: string) => {
-    setMotherQRData(data);
-    setStep('newborn');
-  };
-
   const handleNewbornScan = async (data: string) => {
-    setNewbornQRData(data);
-    setLoading(true);
-
     try {
+      const qrData = JSON.parse(data);
+      console.log('Newborn QR Data:', qrData);
+      
+      if (qrData.type !== 'newborn') {
+        // Detect if it's a mother QR code
+        if (qrData.type === 'mother') {
+          toast.error('⚠️ Mother QR Detected! You scanned a MOTHER QR code. Please scan a NEWBORN QR code in this scanner.', { 
+            duration: 5000,
+            style: {
+              background: '#fef3c7',
+              color: '#92400e',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              padding: '16px',
+              border: '2px solid #f59e0b',
+            },
+            icon: '👩',
+          });
+        } else {
+          toast.error('⚠️ Wrong QR Code! This is NOT a Newborn QR code. Please scan a Newborn QR code.', { 
+            duration: 4000,
+            style: {
+              background: '#fee2e2',
+              color: '#991b1b',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              padding: '16px',
+            },
+            icon: '🚫',
+          });
+        }
+        return;
+      }
+      
+      setNewbornQRData(qrData);
+      setLoading(true);
+
+      // Verify pairing
       const response = await axios.post('/qr-verification/verify-pairing', {
-        mother_qr_data: motherQRData,
+        mother_qr_data: JSON.stringify(motherQRData),
         newborn_qr_data: data,
       });
 
       setVerificationResult(response.data);
       setStep('result');
-      fetchStatistics(); // Refresh stats
+      fetchStatistics();
+      
+      if (response.data.match) {
+        toast.success('✅ MATCH VERIFIED! Mother and Newborn pair confirmed!', { 
+          icon: '✔️',
+          duration: 5000,
+          style: {
+            background: '#d1fae5',
+            color: '#065f46',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            padding: '16px',
+          },
+        });
+      } else {
+        toast.error('🚨 MISMATCH DETECTED! The QR codes DO NOT match! This newborn does NOT belong to this mother!', { 
+          icon: '❌',
+          duration: 6000,
+          style: {
+            background: '#fee2e2',
+            color: '#991b1b',
+            fontWeight: 'bold',
+            fontSize: '16px',
+            padding: '16px',
+            border: '3px solid #dc2626',
+          },
+        });
+      }
     } catch (error: any) {
       console.error('Verification error:', error);
+      const errorMessage = error.response?.data?.message || 'Verification failed. Please try again.';
+      toast.error('❌ ' + errorMessage, {
+        duration: 4000,
+        style: {
+          background: '#fee2e2',
+          color: '#991b1b',
+          fontWeight: 'bold',
+        },
+      });
+      
       setVerificationResult({
         success: false,
         match: false,
-        message: error.response?.data?.message || 'Verification failed',
-      });
-      setStep('result');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSingleScan = async (data: string) => {
-    setLoading(true);
-
-    try {
-      const response = await axios.post('/qr-verification/verify-single', {
-        qr_data: data,
-      });
-
-      setVerificationResult(response.data);
-      setStep('result');
-    } catch (error: any) {
-      console.error('Verification error:', error);
-      setVerificationResult({
-        success: false,
-        message: error.response?.data?.message || 'Verification failed',
+        message: errorMessage,
       });
       setStep('result');
     } finally {
@@ -97,301 +191,271 @@ export default function QRVerification() {
     setStep('mother');
   };
 
-  const toggleHistory = () => {
-    if (!showHistory) {
-      fetchHistory();
-    }
-    setShowHistory(!showHistory);
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">QR Verification</h1>
-          <p className="text-gray-600 mt-1">Scan QR codes to verify patient identification</p>
-        </div>
-        <button
-          onClick={toggleHistory}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-        >
-          {showHistory ? <Camera className="w-5 h-5" /> : <History className="w-5 h-5" />}
-          {showHistory ? 'Scanner' : 'View History'}
-        </button>
-      </div>
-
-      {/* Statistics Cards */}
-      {statistics && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Verifications</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{statistics.total_verifications}</p>
-              </div>
-              <BarChart3 className="w-8 h-8 text-blue-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Matches</p>
-                <p className="text-2xl font-bold text-green-600 mt-1">{statistics.matches}</p>
-              </div>
-              <CheckCircle2 className="w-8 h-8 text-green-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">No Matches</p>
-                <p className="text-2xl font-bold text-red-600 mt-1">{statistics.no_matches}</p>
-              </div>
-              <XCircle className="w-8 h-8 text-red-500" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Match Rate</p>
-                <p className="text-2xl font-bold text-primary mt-1">{statistics.match_rate}%</p>
-              </div>
-              <AlertTriangle className="w-8 h-8 text-primary" />
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50/30 p-3 sm:p-6">
+      <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
+        {/* Header */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl sm:rounded-2xl shadow-soft-lg p-4 sm:p-8 text-white">
+          <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-white/10 rounded-full -mr-16 sm:-mr-32 -mt-16 sm:-mt-32"></div>
+          <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-48 sm:h-48 bg-white/10 rounded-full -ml-12 sm:-ml-24 -mb-12 sm:-mb-24"></div>
+          <div className="relative z-10">
+            <h1 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 flex items-center gap-2 sm:gap-3 animate-fade-in">
+              <QrCode className="w-7 h-7 sm:w-10 sm:h-10" />
+              QR Verification
+            </h1>
+            <p className="text-white/90 text-sm sm:text-lg animate-slide-up">Scan QR codes to verify mother-newborn pairing</p>
           </div>
         </div>
-      )}
 
-      {showHistory ? (
-        /* History View */
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Verification History</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date/Time</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mother</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Newborn</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Result</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Verified By</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {history.map((record) => (
-                  <tr key={record.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {format(new Date(record.verified_at), 'MMM dd, yyyy HH:mm')}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {record.mother_qr_code?.qrcodeable?.full_name || 'Unknown'}
-                      <p className="text-xs text-gray-500">{record.mother_qr_code?.qrcodeable?.mother_id}</p>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {record.newborn_qr_code?.qrcodeable?.full_name || 'Unnamed'}
-                      <p className="text-xs text-gray-500">{record.newborn_qr_code?.qrcodeable?.newborn_id}</p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {record.verification_result === 'match' ? (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
-                          <CheckCircle2 className="w-4 h-4" />
-                          Match
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800">
-                          <XCircle className="w-4 h-4" />
-                          No Match
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {record.verified_by?.name || 'Unknown'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {history.length === 0 && (
-              <div className="text-center py-12">
-                <History className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-500">No verification history yet</p>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        /* Scanner View */
-        <div className="bg-white rounded-lg shadow p-6">
-          {/* Mode Selection */}
-          <div className="flex gap-4 mb-6">
-            <button
-              onClick={() => {
-                setMode('pairing');
-                resetVerification();
-              }}
-              className={`flex-1 px-6 py-3 rounded-lg font-semibold transition ${
-                mode === 'pairing'
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Mother-Newborn Pairing
-            </button>
-            <button
-              onClick={() => {
-                setMode('single');
-                resetVerification();
-              }}
-              className={`flex-1 px-6 py-3 rounded-lg font-semibold transition ${
-                mode === 'single'
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Single QR Verification
-            </button>
-          </div>
-
-          {/* Scanner or Result */}
+        {/* Main Content */}
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-soft-lg p-4 sm:p-8 border border-gray-100">
           {step === 'result' && verificationResult ? (
             /* Verification Result */
-            <div className="text-center py-12">
-              {mode === 'pairing' ? (
-                /* Pairing Result */
-                <div>
-                  {verificationResult.match ? (
-                    <div>
-                      <CheckCircle2 className="w-24 h-24 text-green-500 mx-auto mb-6" />
-                      <h2 className="text-3xl font-bold text-green-600 mb-4">✓ MATCH</h2>
-                      <p className="text-lg text-gray-700 mb-8">{verificationResult.message}</p>
-                      
-                      <div className="max-w-2xl mx-auto bg-green-50 rounded-lg p-6 text-left space-y-4">
-                        <div>
-                          <h3 className="font-semibold text-gray-900 mb-2">Mother Information:</h3>
-                          <p className="text-gray-700">{verificationResult.mother?.full_name}</p>
-                          <p className="text-sm text-gray-600">ID: {verificationResult.mother?.mother_id}</p>
+            <div className="text-center py-8 animate-scale-in">
+              {verificationResult.match ? (
+                /* ✓ MATCH - SUCCESS */
+                <div className="space-y-8">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-32 h-32 bg-success rounded-full opacity-10 animate-pulse-slow"></div>
+                    </div>
+                    <CheckCircle2 className="w-32 h-32 text-success mx-auto relative z-10 animate-bounce-soft" />
+                  </div>
+                  
+                  <div>
+                    <h2 className="text-5xl font-bold text-success mb-3 animate-fade-in">✓ VERIFIED</h2>
+                    <p className="text-2xl text-gray-700 font-medium animate-slide-up">{verificationResult.message}</p>
+                  </div>
+                  
+                  <div className="max-w-3xl mx-auto bg-gradient-to-br from-success-light to-green-50 rounded-2xl p-8 text-left space-y-6 shadow-soft border-2 border-success">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-3 h-3 bg-success rounded-full animate-pulse"></div>
+                      <p className="text-success-dark font-bold text-lg">Mother-Baby Pairing Confirmed</p>
+                    </div>
+                    
+                    <div className="border-b-2 border-green-200 pb-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-soft">
+                          <Users className="w-5 h-5 text-blue-600" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 mb-2">Newborn Information:</h3>
-                          <p className="text-gray-700">{verificationResult.newborn?.full_name || 'Unnamed'}</p>
-                          <p className="text-sm text-gray-600">ID: {verificationResult.newborn?.newborn_id}</p>
-                          <p className="text-sm text-gray-600">Sex: {verificationResult.newborn?.sex}</p>
+                        <h3 className="font-bold text-gray-900 text-xl">Mother Information</h3>
+                      </div>
+                      <div className="space-y-3 pl-13">
+                        <p className="text-gray-900 font-bold text-2xl">{verificationResult.mother?.full_name}</p>
+                        <div className="flex flex-wrap gap-3">
+                          <span className="px-4 py-2 bg-white rounded-xl text-sm font-semibold text-gray-700 shadow-soft">
+                            ID: {verificationResult.mother?.mother_id}
+                          </span>
+                          <span className="px-4 py-2 bg-white rounded-xl text-sm font-semibold text-gray-700 shadow-soft">
+                            DOB: {verificationResult.mother?.date_of_birth ? 
+                              format(new Date(verificationResult.mother.date_of_birth), 'MMM dd, yyyy') : 'N/A'}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  ) : (
+                    
                     <div>
-                      <XCircle className="w-24 h-24 text-red-500 mx-auto mb-6" />
-                      <h2 className="text-3xl font-bold text-red-600 mb-4">✗ NO MATCH</h2>
-                      <p className="text-lg text-gray-700 mb-8">{verificationResult.message}</p>
-                      
-                      <div className="max-w-2xl mx-auto bg-red-50 rounded-lg p-6 text-left space-y-4">
-                        <div className="flex items-start gap-3 p-4 bg-red-100 rounded-lg">
-                          <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="font-semibold text-red-900">Warning: Mismatch Detected</p>
-                            <p className="text-sm text-red-700 mt-1">
-                              The scanned newborn does not belong to the scanned mother.
-                            </p>
-                          </div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-soft">
+                          <Baby className="w-5 h-5 text-green-600" />
                         </div>
-                        
-                        <div>
-                          <h3 className="font-semibold text-gray-900 mb-2">Scanned Mother:</h3>
-                          <p className="text-gray-700">{verificationResult.mother?.full_name}</p>
-                          <p className="text-sm text-gray-600">ID: {verificationResult.mother?.mother_id}</p>
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 mb-2">Scanned Newborn:</h3>
-                          <p className="text-gray-700">{verificationResult.newborn?.full_name || 'Unnamed'}</p>
-                          <p className="text-sm text-gray-600">ID: {verificationResult.newborn?.newborn_id}</p>
-                          <p className="text-sm text-red-600 font-medium mt-2">
-                            Actual Mother: {verificationResult.newborn?.expected_mother_name || 'Unknown'}
-                          </p>
+                        <h3 className="font-bold text-gray-900 text-xl">Newborn Information</h3>
+                      </div>
+                      <div className="space-y-3 pl-13">
+                        <p className="text-gray-900 font-bold text-2xl">
+                          {verificationResult.newborn?.full_name || 'Baby of ' + verificationResult.mother?.full_name}
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                          <span className="px-4 py-2 bg-white rounded-xl text-sm font-semibold text-gray-700 shadow-soft">
+                            ID: {verificationResult.newborn?.newborn_id}
+                          </span>
+                          <span className="px-4 py-2 bg-white rounded-xl text-sm font-semibold text-gray-700 shadow-soft">
+                            Sex: {verificationResult.newborn?.sex}
+                          </span>
+                          <span className="px-4 py-2 bg-white rounded-xl text-sm font-semibold text-gray-700 shadow-soft">
+                            DOB: {verificationResult.newborn?.date_of_birth ? 
+                              format(new Date(verificationResult.newborn.date_of_birth), 'MMM dd, yyyy HH:mm') : 'N/A'}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               ) : (
-                /* Single Verification Result */
-                <div>
-                  {verificationResult.success ? (
-                    <div>
-                      <CheckCircle2 className="w-24 h-24 text-green-500 mx-auto mb-6" />
-                      <h2 className="text-3xl font-bold text-green-600 mb-4">✓ VERIFIED</h2>
-                      <p className="text-lg text-gray-700 mb-8">{verificationResult.message}</p>
-                      
-                      <div className="max-w-2xl mx-auto bg-green-50 rounded-lg p-6 text-left">
-                        <h3 className="font-semibold text-gray-900 mb-2">Record Information:</h3>
-                        <p className="text-gray-700 font-semibold">{verificationResult.record?.full_name}</p>
-                        <p className="text-sm text-gray-600">
-                          ID: {verificationResult.record?.mother_id || verificationResult.record?.newborn_id}
+                /* ✗ MISMATCH - ERROR */
+                <div className="space-y-8">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-32 h-32 bg-error rounded-full opacity-10 animate-pulse-slow"></div>
+                    </div>
+                    <XCircle className="w-32 h-32 text-error mx-auto relative z-10 animate-bounce-soft" />
+                  </div>
+                  
+                  <div>
+                    <h2 className="text-5xl font-bold text-error mb-3 animate-fade-in">✗ MISMATCH</h2>
+                    <p className="text-2xl text-gray-700 font-medium animate-slide-up">{verificationResult.message}</p>
+                  </div>
+                  
+                  <div className="max-w-3xl mx-auto bg-gradient-to-br from-error-light to-red-50 rounded-2xl p-8 text-left space-y-6 shadow-soft-lg border-4 border-error animate-pulse-slow">
+                    <div className="flex items-start gap-4 p-5 bg-gradient-error rounded-xl text-white">
+                      <AlertTriangle className="w-8 h-8 flex-shrink-0 mt-1 animate-bounce-soft" />
+                      <div>
+                        <p className="font-bold text-xl mb-2">⚠️ CRITICAL ALERT: Mismatch Detected</p>
+                        <p className="text-white/90 text-base">
+                          The scanned newborn <strong>DOES NOT BELONG</strong> to the scanned mother. 
+                          This could be a patient safety issue. Please verify immediately and notify supervisor.
                         </p>
-                        <p className="text-sm text-gray-600">Type: {verificationResult.type}</p>
-                        <p className="text-sm text-gray-600">QR Code: {verificationResult.qr_code?.code}</p>
                       </div>
                     </div>
-                  ) : (
-                    <div>
-                      <XCircle className="w-24 h-24 text-red-500 mx-auto mb-6" />
-                      <h2 className="text-3xl font-bold text-red-600 mb-4">✗ FAILED</h2>
-                      <p className="text-lg text-gray-700 mb-8">{verificationResult.message}</p>
-                    </div>
-                  )}
+                    
+                    {verificationResult.mother && (
+                      <div className="border-b-2 border-red-200 pb-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-soft">
+                            <Users className="w-5 h-5 text-gray-700" />
+                          </div>
+                          <h3 className="font-bold text-gray-900 text-xl">Scanned Mother</h3>
+                        </div>
+                        <div className="space-y-3 pl-13">
+                          <p className="text-gray-900 font-bold text-2xl">{verificationResult.mother?.full_name}</p>
+                          <div className="flex flex-wrap gap-3">
+                            <span className="px-4 py-2 bg-white rounded-xl text-sm font-semibold text-gray-700 shadow-soft">
+                              ID: {verificationResult.mother?.mother_id}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {verificationResult.newborn && (
+                      <div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-soft">
+                            <Baby className="w-5 h-5 text-gray-700" />
+                          </div>
+                          <h3 className="font-bold text-gray-900 text-xl">Scanned Newborn</h3>
+                        </div>
+                        <div className="space-y-3 pl-13">
+                          <p className="text-gray-900 font-bold text-2xl">
+                            {verificationResult.newborn?.full_name || 'Unnamed Baby'}
+                          </p>
+                          <div className="flex flex-wrap gap-3">
+                            <span className="px-4 py-2 bg-white rounded-xl text-sm font-semibold text-gray-700 shadow-soft">
+                              ID: {verificationResult.newborn?.newborn_id}
+                            </span>
+                          </div>
+                          {verificationResult.newborn?.expected_mother_name && (
+                            <div className="mt-4 p-4 bg-white rounded-xl border-2 border-error">
+                              <p className="text-sm font-semibold text-error-dark mb-1">Expected Mother:</p>
+                              <p className="text-lg font-bold text-error">
+                                {verificationResult.newborn.expected_mother_name}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
               <button
                 onClick={resetVerification}
-                className="mt-8 px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-semibold"
+                className="mt-10 px-10 py-4 bg-gradient-primary text-white rounded-xl hover:shadow-glow transition-all-smooth font-bold text-lg flex items-center gap-3 mx-auto group"
               >
-                Scan Another
+                <RefreshCw className="w-6 h-6 group-hover:rotate-180 transition-transform duration-500" />
+                Scan Another Pair
               </button>
             </div>
           ) : (
             /* QR Scanner */
-            <div>
-              {mode === 'pairing' && (
-                <div className="mb-6">
-                  <div className="flex items-center justify-center gap-4">
-                    <div className={`flex items-center gap-2 ${step === 'mother' ? 'text-primary font-semibold' : 'text-gray-400'}`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'mother' ? 'bg-primary text-white' : 'bg-gray-200'}`}>
-                        1
-                      </div>
-                      <span>Mother QR</span>
+            <div className="animate-fade-in">
+              {/* Progress Steps */}
+              <div className="mb-6 sm:mb-10">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+                  <div className={`flex items-center gap-3 sm:gap-4 transition-all-smooth ${
+                    step === 'mother' ? 'scale-105 sm:scale-110' : ''
+                  }`}>
+                    <div className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-lg sm:text-xl font-bold transition-all-smooth ${
+                      step === 'mother' ? 'bg-gradient-primary text-white shadow-glow animate-pulse-slow' : 
+                      motherQRData ? 'bg-gradient-success text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      {motherQRData ? <CheckCircle2 className="w-6 h-6 sm:w-8 sm:h-8" /> : '1'}
+                      {step === 'mother' && (
+                        <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-25"></div>
+                      )}
                     </div>
-                    <div className="w-12 h-0.5 bg-gray-300"></div>
-                    <div className={`flex items-center gap-2 ${step === 'newborn' ? 'text-primary font-semibold' : 'text-gray-400'}`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 'newborn' ? 'bg-primary text-white' : 'bg-gray-200'}`}>
-                        2
-                      </div>
-                      <span>Newborn QR</span>
+                    <div className="text-left">
+                      <span className={`block text-base sm:text-lg font-bold transition-colors ${
+                        step === 'mother' ? 'text-primary' : motherQRData ? 'text-success' : 'text-gray-400'
+                      }`}>
+                        Scan Mother QR
+                      </span>
+                      <span className="text-xs sm:text-sm text-gray-500">Step 1 of 2</span>
+                    </div>
+                  </div>
+                  
+                  <div className={`w-16 sm:w-24 h-1 sm:h-2 rounded-full transition-all-smooth rotate-90 sm:rotate-0 ${
+                    motherQRData ? 'bg-gradient-primary' : 'bg-gray-200'
+                  }`}></div>
+                  
+                  <div className={`flex items-center gap-3 sm:gap-4 transition-all-smooth ${
+                    step === 'newborn' ? 'scale-105 sm:scale-110' : ''
+                  }`}>
+                    <div className={`relative w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-lg sm:text-xl font-bold transition-all-smooth ${
+                      step === 'newborn' ? 'bg-gradient-primary text-white shadow-glow animate-pulse-slow' : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      2
+                      {step === 'newborn' && (
+                        <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-25"></div>
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <span className={`block text-base sm:text-lg font-bold transition-colors ${
+                        step === 'newborn' ? 'text-primary' : 'text-gray-400'
+                      }`}>
+                        Scan Newborn QR
+                      </span>
+                      <span className="text-xs sm:text-sm text-gray-500">Step 2 of 2</span>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Scanner */}
+              {loading ? (
+                <div className="text-center py-12 sm:py-16 bg-gradient-to-br from-primary-50 to-purple-50 rounded-xl sm:rounded-2xl">
+                  <RefreshCw className="w-12 h-12 sm:w-16 sm:h-16 text-primary animate-spin mx-auto mb-4 sm:mb-6" />
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 px-4">Verifying Pairing...</p>
+                  <p className="text-sm sm:text-base text-gray-600 px-4">Please wait while we match the QR codes</p>
+                  <div className="mt-4 sm:mt-6 max-w-xs mx-auto bg-white rounded-full h-2 overflow-hidden">
+                    <div className="bg-gradient-primary h-full rounded-full animate-pulse-slow" style={{ width: '70%' }}></div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-6 border-2 border-dashed border-primary-300">
+                  <QRScanner
+                    onScan={step === 'mother' ? handleMotherScan : handleNewbornScan}
+                    label={step === 'mother' ? '📱 Step 1: Scan Mother QR Code' : '👶 Step 2: Scan Newborn QR Code'}
+                    autoStart={true}
+                  />
+                </div>
               )}
 
-              <QRScanner
-                onScan={mode === 'single' ? handleSingleScan : step === 'mother' ? handleMotherScan : handleNewbornScan}
-                label={mode === 'single' ? 'Scan QR Code' : step === 'mother' ? 'Scan Mother QR Code' : 'Scan Newborn QR Code'}
-              />
-
-              {mode === 'pairing' && step === 'newborn' && (
-                <div className="mt-6 text-center">
+              {/* Back Button */}
+              {step === 'newborn' && !loading && (
+                <div className="mt-8 text-center">
                   <button
                     onClick={() => {
                       setMotherQRData(null);
                       setStep('mother');
+                      toast.info('↩️ Restarting - scan mother QR code first', {
+                        icon: '🔄'
+                      });
                     }}
-                    className="text-gray-600 hover:text-gray-900 underline"
+                    className="text-gray-600 hover:text-primary underline font-semibold text-lg flex items-center gap-2 mx-auto transition-colors group"
                   >
+                    <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
                     ← Back to scan mother QR
                   </button>
                 </div>
@@ -399,7 +463,7 @@ export default function QRVerification() {
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

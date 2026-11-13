@@ -13,21 +13,64 @@ class MidwiferyUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create midwifery user if not exists
-        if (!User::where('email', 'midwifery@safematch.com')->exists()) {
-            User::create([
-                'name' => 'Midwifery User',
-                'email' => 'midwifery@safematch.com',
-                'password' => Hash::make('password'),
+        $midwives = [
+            [
+                'name' => 'Maria Santos',
+                'email' => 'maria.santos@safematch.com',
+                'password' => Hash::make('midwife123'),
                 'role' => 'healthcare_personnel',
-                'contact_number' => '09123456788',
+                'contact_number' => '09171234567',
+                'position' => 'Senior Midwife',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Ana Cruz',
+                'email' => 'ana.cruz@safematch.com',
+                'password' => Hash::make('midwife123'),
+                'role' => 'healthcare_personnel',
+                'contact_number' => '09181234567',
                 'position' => 'Midwife',
                 'is_active' => true,
-            ]);
-            
-            $this->command->info('✓ Midwifery user created: midwifery@safematch.com / password');
-        } else {
-            $this->command->info('✓ Midwifery user already exists');
+            ],
+            [
+                'name' => 'Rosa Reyes',
+                'email' => 'rosa.reyes@safematch.com',
+                'password' => Hash::make('midwife123'),
+                'role' => 'healthcare_personnel',
+                'contact_number' => '09191234567',
+                'position' => 'Midwife',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Elena Garcia',
+                'email' => 'elena.garcia@safematch.com',
+                'password' => Hash::make('midwife123'),
+                'role' => 'healthcare_personnel',
+                'contact_number' => '09201234567',
+                'position' => 'Junior Midwife',
+                'is_active' => true,
+            ],
+        ];
+
+        $this->command->info('Creating midwife users...');
+        $this->command->newLine();
+
+        foreach ($midwives as $midwife) {
+            if (!User::where('email', $midwife['email'])->exists()) {
+                User::create($midwife);
+                $this->command->info("✓ Created: {$midwife['name']} ({$midwife['email']})");
+            } else {
+                $this->command->warn("⊘ Already exists: {$midwife['name']} ({$midwife['email']})");
+            }
         }
+
+        $this->command->newLine();
+        $this->command->info('═══════════════════════════════════════');
+        $this->command->info('  LOGIN CREDENTIALS FOR MIDWIVES');
+        $this->command->info('═══════════════════════════════════════');
+        foreach ($midwives as $midwife) {
+            $this->command->info("Email: {$midwife['email']} | Password: midwife123");
+        }
+        $this->command->info('═══════════════════════════════════════');
     }
 }

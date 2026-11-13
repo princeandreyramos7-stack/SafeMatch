@@ -419,9 +419,18 @@ export default function MotherDetails({ motherId, onClose }: MotherDetailsProps)
             <div className="p-6 text-center">
               <div className="bg-white border-2 border-gray-200 rounded-lg p-4 inline-block">
                 <img
-                  src={`${import.meta.env.VITE_API_URL}/api/qr-codes/${mother.qr_code.id}/image`}
+                  src={`${import.meta.env.VITE_BASE_URL}/api/qr-codes/${mother.qr_code.id}/image`}
                   alt="QR Code"
                   className="w-64 h-64"
+                  onError={(e) => {
+                    console.error('QR image failed to load');
+                    console.error('URL:', `${import.meta.env.VITE_BASE_URL}/api/qr-codes/${mother.qr_code.id}/image`);
+                    console.error('QR Code ID:', mother.qr_code.id);
+                    e.currentTarget.style.display = 'none';
+                  }}
+                  onLoad={() => {
+                    console.log('QR image loaded successfully');
+                  }}
                 />
               </div>
 
