@@ -101,11 +101,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('discharge/decision', [App\Http\Controllers\Api\DischargeController::class, 'createDecision']);
     Route::get('discharge/records', [App\Http\Controllers\Api\DischargeController::class, 'index']);
     
-    // Users (Admin only)
-    Route::middleware('role:administrator')->group(function () {
-        Route::apiResource('users', App\Http\Controllers\Api\UserController::class);
-        Route::post('users/{user}/toggle-status', [App\Http\Controllers\Api\UserController::class, 'toggleStatus']);
-    });
+    // Users (Accessible to all authenticated users)
+    Route::apiResource('users', App\Http\Controllers\Api\UserController::class);
+    Route::post('users/{user}/toggle-status', [App\Http\Controllers\Api\UserController::class, 'toggleStatus']);
+    
+    // Profile Management
+    Route::put('/profile', [App\Http\Controllers\Api\UserController::class, 'updateProfile']);
+    Route::post('/profile', [App\Http\Controllers\Api\UserController::class, 'updateProfile']); // POST for file upload
     
     // Activity Logs
     Route::get('/activity-logs', [App\Http\Controllers\Api\ActivityLogController::class, 'index']);

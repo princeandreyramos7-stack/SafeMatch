@@ -1,5 +1,5 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
@@ -9,6 +9,35 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children, requireRole }: ProtectedRouteProps) {
   const { isAuthenticated, user, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Prevent browser back button after logout
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Clear history and prevent back navigation
+      window.history.pushState(null, '', window.location.href);
+      
+      const handlePopState = () => {
+        window.history.pushState(null, '', window.location.href);
+        navigate('/login', { replace: true });
+      };
+
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Prevent page caching (so back button doesn't show cached content)
+  useEffect(() => {
+    window.onpageshow = function(event) {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -22,6 +51,8 @@ export default function ProtectedRoute({ children, requireRole }: ProtectedRoute
   }
 
   if (!isAuthenticated) {
+    // Clear any cached data
+    sessionStorage.clear();
     return <Navigate to="/login" replace />;
   }
 

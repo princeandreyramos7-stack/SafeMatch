@@ -33,6 +33,7 @@ const getPageTitle = (pathname: string): string => {
     '/notifications': 'Notifications',
     '/activity-logs': 'Activity Logs',
     '/users': 'Users',
+    '/profile': 'My Profile',
   };
   return titles[pathname] || 'SafeMatch';
 };
@@ -44,15 +45,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-teal-200 bg-teal-700">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1 text-white hover:bg-teal-600" />
+      <SidebarInset className="overflow-x-hidden">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-teal-200 bg-teal-700 w-full">
+          <div className="flex items-center gap-2 px-4 w-full overflow-x-hidden">
+            <SidebarTrigger className="-ml-1 text-white hover:bg-teal-600 flex-shrink-0" />
             <Separator
               orientation="vertical"
-              className="mr-2 h-4 bg-teal-500"
+              className="mr-2 h-4 bg-teal-500 flex-shrink-0"
             />
-            <Breadcrumb>
+            <Breadcrumb className="overflow-x-hidden">
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink href="/dashboard" className="text-teal-100 hover:text-white">
@@ -61,7 +62,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block text-teal-300" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage className="text-white font-semibold">
+                  <BreadcrumbPage className="text-white font-semibold truncate">
                     {pageTitle}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
@@ -69,7 +70,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             </Breadcrumb>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-6 bg-gradient-to-br from-teal-50 to-green-50 min-h-screen">
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-6 bg-gradient-to-br from-teal-50 to-green-50 min-h-screen w-full overflow-x-hidden">
           {children}
         </div>
       </SidebarInset>

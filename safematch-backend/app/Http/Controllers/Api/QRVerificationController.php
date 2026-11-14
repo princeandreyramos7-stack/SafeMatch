@@ -190,8 +190,8 @@ class QRVerificationController extends Controller
                 'success' => true,
                 'match' => $isMatch,
                 'message' => $isMatch 
-                    ? '✓ MATCH: Mother and newborn pairing verified'
-                    : '✗ NO MATCH: This newborn does not belong to this mother',
+                    ? 'MATCH: Mother and newborn pairing verified'
+                    : 'NO MATCH: This newborn does not belong to this mother',
                 'verification' => $verification,
                 'mother' => [
                     'id' => $mother->id,

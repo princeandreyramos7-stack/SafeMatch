@@ -56,10 +56,15 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'role' => ['required', Rule::in(['administrator', 'healthcare_personnel'])],
-            'contact_number' => 'nullable|string|max:20',
-            'position' => 'nullable|string|max:255',
+            'role' => ['required', Rule::in(['healthcare_personnel'])], // Only healthcare_personnel allowed
+            'contact_number' => 'required|digits:11', // Exactly 11 digits
+            'position' => 'required|string|max:255', // Required
             'is_active' => 'boolean',
+        ], [
+            'contact_number.required' => 'Contact number is required',
+            'contact_number.digits' => 'Contact number must be exactly 11 digits',
+            'position.required' => 'Position is required',
+            'role.in' => 'Role must be Healthcare Personnel',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -95,10 +100,15 @@ class UserController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'email' => ['sometimes', 'required', 'email', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8',
-            'role' => ['sometimes', 'required', Rule::in(['administrator', 'healthcare_personnel'])],
-            'contact_number' => 'nullable|string|max:20',
-            'position' => 'nullable|string|max:255',
+            'role' => ['sometimes', 'required', Rule::in(['healthcare_personnel'])], // Only healthcare_personnel allowed
+            'contact_number' => 'required|digits:11', // Exactly 11 digits
+            'position' => 'required|string|max:255', // Required
             'is_active' => 'boolean',
+        ], [
+            'contact_number.required' => 'Contact number is required',
+            'contact_number.digits' => 'Contact number must be exactly 11 digits',
+            'position.required' => 'Position is required',
+            'role.in' => 'Role must be Healthcare Personnel',
         ]);
 
         if (isset($validated['password'])) {
@@ -171,6 +181,78 @@ class UserController extends Controller
         return response()->json([
             'message' => 'User status updated successfully',
             'user' => $user,
+        ]);
+    }
+
+    /**
+     * Update authenticated user's profile.
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'contact_number' => 'required|digits:11',
+            'position' => 'required|string|max:255',
+            'current_password' => 'nullable|required_with:password|string',
+            'password' => 'nullable|string|min:8|confirmed',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Max 2MB
+        ], [
+            'contact_number.required' => 'Contact number is required',
+            'contact_number.digits' => 'Contact number must be exactly 11 digits',
+            'position.required' => 'Position is required',
+            'current_password.required_with' => 'Current password is required to change password',
+            'password.min' => 'New password must be at least 8 characters',
+            'password.confirmed' => 'Password confirmation does not match',
+            'profile_picture.image' => 'File must be an image',
+            'profile_picture.mimes' => 'Profile picture must be a jpeg, png, jpg, or gif file',
+            'profile_picture.max' => 'Profile picture must not exceed 2MB',
+        ]);
+
+        // If changing password, verify current password
+        if ($request->filled('password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => [
+                        'current_password' => ['Current password is incorrect'],
+                    ],
+                ], 422);
+            }
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            unset($validated['password']);
+        }
+
+        // Handle profile picture upload
+        if ($request->hasFile('profile_picture')) {
+            // Delete old profile picture if exists
+            if ($user->profile_picture) {
+                \Storage::disk('public')->delete($user->profile_picture);
+            }
+
+            // Store new profile picture
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $validated['profile_picture'] = $path;
+        }
+
+        // Remove password-related fields that shouldn't be updated directly
+        unset($validated['current_password']);
+        unset($validated['password_confirmation']);
+
+        $user->update($validated);
+
+        // Log activity
+        activity()
+            ->causedBy($user)
+            ->performedOn($user)
+            ->log('Updated profile');
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'user' => $user->fresh(),
         ]);
     }
 }

@@ -5,6 +5,7 @@ import { Plus, Search, Edit, Trash2, Eye, Baby } from 'lucide-react';
 import { format } from 'date-fns';
 import NewbornForm from '../components/NewbornForm';
 import NewbornDetails from '../components/NewbornDetails';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 interface Newborn {
   id: number;
@@ -41,6 +42,8 @@ export default function Newborns() {
   const [sexFilter, setSexFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingNewborn, setDeletingNewborn] = useState<Newborn | null>(null);
   const [editingNewborn, setEditingNewborn] = useState<Newborn | null>(null);
   const [viewingNewborn, setViewingNewborn] = useState<Newborn | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -74,8 +77,6 @@ export default function Newborns() {
   };
 
   const handleDelete = async (newbornId: number) => {
-    if (!confirm('Are you sure you want to delete this newborn record?')) return;
-
     try {
       await axios.delete(`/newborns/${newbornId}`);
       toast.success('Newborn record deleted successfully');
@@ -83,6 +84,11 @@ export default function Newborns() {
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete newborn record');
     }
+  };
+
+  const confirmDelete = (newborn: Newborn) => {
+    setDeletingNewborn(newborn);
+    setShowDeleteModal(true);
   };
 
   const handleFormSuccess = () => {
@@ -147,18 +153,18 @@ export default function Newborns() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-4 sm:space-y-6 w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Newborn Management</h1>
-          <p className="text-gray-600 mt-2">Register and manage newborn records</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Newborn Management</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Register and manage newborn records</p>
         </div>
         <button
           onClick={() => {
             setEditingNewborn(null);
             setShowForm(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition w-full sm:w-auto justify-center"
         >
           <Plus className="w-5 h-5" />
           Register Newborn
@@ -166,8 +172,8 @@ export default function Newborns() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -301,7 +307,7 @@ export default function Newborns() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(newborn.id)}
+                          onClick={() => confirmDelete(newborn)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
                           title="Delete"
                         >
@@ -357,6 +363,23 @@ export default function Newborns() {
         <NewbornDetails
           newbornId={viewingNewborn.id}
           onClose={handleDetailsClose}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingNewborn && (
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeletingNewborn(null);
+          }}
+          onConfirm={() => handleDelete(deletingNewborn.id)}
+          title="Delete Newborn Record"
+          message="Are you sure you want to delete this newborn record?"
+          itemName={deletingNewborn.full_name || 'Unnamed Newborn'}
+          itemDetails={`ID: ${deletingNewborn.newborn_id}`}
+          warningMessage="This will permanently delete all associated screenings and assessments."
         />
       )}
     </div>

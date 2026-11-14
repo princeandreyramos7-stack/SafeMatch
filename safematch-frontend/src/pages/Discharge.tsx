@@ -9,6 +9,8 @@ import DischargeRequirementsModal from '../components/DischargeRequirementsModal
 export default function Discharge() {
   const [recentDecisions, setRecentDecisions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [showReadinessModal, setShowReadinessModal] = useState(false);
   const [showRequirementsModal, setShowRequirementsModal] = useState(false);
   const [selectedMother, setSelectedMother] = useState<any>(null);
@@ -18,7 +20,7 @@ export default function Discharge() {
   useEffect(() => {
     fetchRecentDecisions();
     fetchStatistics();
-  }, []);
+  }, [search, statusFilter]);
 
   const fetchRecentDecisions = async () => {
     try {
@@ -76,20 +78,48 @@ export default function Discharge() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Discharge Management</h1>
-          <p className="text-gray-600 mt-1">Monitor discharge readiness and manage patient discharge</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Discharge Management</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Monitor discharge readiness and manage patient discharge</p>
         </div>
         <button
           onClick={() => setShowRequirementsModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition w-full sm:w-auto justify-center"
         >
           <Settings className="w-5 h-5" />
-          Manage Requirements
+          <span className="hidden sm:inline">Manage Requirements</span>
+          <span className="sm:hidden">Requirements</span>
         </button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search by mother or newborn..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm sm:text-base"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none text-sm sm:text-base"
+          >
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="on_hold">On Hold</option>
+            <option value="discharged">Discharged</option>
+          </select>
+        </div>
       </div>
 
       {/* Statistics Cards */}

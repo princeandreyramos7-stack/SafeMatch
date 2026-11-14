@@ -171,8 +171,8 @@ export default function QRVerificationMobile() {
           {matchStatus === 'match' && (
             <>
               <CheckCircle className="mx-auto text-green-600 mb-3" size={64} />
-              <p className="text-2xl font-bold text-green-900 mb-2">✓ VERIFIED — Mother-baby pair matched</p>
-              <p className="text-sm text-green-800">Both QR tokens are valid and share the same registered demo relationship.</p>
+              <p className="text-2xl font-bold text-green-900 mb-2">VERIFIED</p>
+              <p className="text-sm text-green-800 mt-2">✓ Mother-baby pair matched - Both QR tokens are valid and share the same registered relationship.</p>
             </>
           )}
           {matchStatus === 'no-match' && (

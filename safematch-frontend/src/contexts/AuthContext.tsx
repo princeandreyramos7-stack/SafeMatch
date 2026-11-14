@@ -16,6 +16,7 @@ interface AuthContextType {
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (userData: User) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -40,6 +41,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
+  // Add event listener for storage changes (handles logout in other tabs)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_token' && !e.newValue) {
+        // Token was removed in another tab
+        setUser(null);
+        setToken(null);
+        window.location.href = '/login';
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Prevent browser back button after logout
+  useEffect(() => {
+    const preventBack = () => {
+      if (!token && window.location.pathname !== '/login' && window.location.pathname !== '/') {
+        window.history.pushState(null, '', window.location.href);
+        window.location.replace('/login');
+      }
+    };
+
+    window.addEventListener('popstate', preventBack);
+    return () => window.removeEventListener('popstate', preventBack);
+  }, [token]);
+
   const login = async (email: string, password: string) => {
     try {
       const response = await axios.post('/login', { email, password });
@@ -50,6 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('user', JSON.stringify(userData));
+      
+      // Add timestamp for session management
+      localStorage.setItem('login_time', new Date().toISOString());
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -62,11 +94,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Clear all auth data
       setUser(null);
       setToken(null);
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
+      localStorage.removeItem('login_time');
+      
+      // Clear session storage as well
+      sessionStorage.clear();
+      
+      // Force clear browser cache for auth pages
+      if (window.history && window.history.pushState) {
+        window.history.pushState(null, '', '/login');
+        window.history.replaceState(null, '', '/login');
+      }
+      
+      // Redirect to login
+      window.location.replace('/login');
     }
+  };
+
+  const updateUser = (userData: User) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
   };
 
   const value = {
@@ -74,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token,
     login,
     logout,
+    updateUser,
     isAuthenticated: !!token && !!user,
     isLoading,
   };

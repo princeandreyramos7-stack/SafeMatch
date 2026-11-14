@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Bell, Check, CheckCheck, Trash2, AlertCircle, Info, CheckCircle } from 'lucide-react';
 import axios from '../lib/axios';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 interface Notification {
   id: number;
@@ -18,6 +19,8 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingNotification, setDeletingNotification] = useState<Notification | null>(null);
 
   useEffect(() => {
     fetchNotifications();
@@ -70,8 +73,6 @@ export default function Notifications() {
   };
 
   const deleteNotification = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this notification?')) return;
-
     try {
       await axios.delete(`/notifications/${id}`);
       fetchNotifications();
@@ -79,6 +80,11 @@ export default function Notifications() {
     } catch (error) {
       console.error('Error deleting notification:', error);
     }
+  };
+
+  const confirmDelete = (notification: Notification) => {
+    setDeletingNotification(notification);
+    setShowDeleteModal(true);
   };
 
   const getNotificationIcon = (type: string) => {
@@ -230,7 +236,7 @@ export default function Notifications() {
                           </button>
                         )}
                         <button
-                          onClick={() => deleteNotification(notification.id)}
+                          onClick={() => confirmDelete(notification)}
                           className="text-gray-400 hover:text-red-600"
                           title="Delete"
                         >
@@ -258,6 +264,22 @@ export default function Notifications() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deletingNotification && (
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeletingNotification(null);
+          }}
+          onConfirm={() => deleteNotification(deletingNotification.id)}
+          title="Delete Notification"
+          message="Are you sure you want to delete this notification?"
+          itemName={deletingNotification.title}
+          itemDetails={deletingNotification.message.substring(0, 100)}
+        />
+      )}
     </div>
   );
 }

@@ -16,6 +16,7 @@ import Discharge from './pages/Discharge';
 import Analytics from './pages/Analytics';
 import Notifications from './pages/Notifications';
 import ActivityLogs from './pages/ActivityLogs';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -68,14 +69,8 @@ function App() {
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/activity-logs" element={<ActivityLogs />} />
-                    <Route 
-                      path="/users" 
-                      element={
-                        <ProtectedRoute requireRole="administrator">
-                          <Users />
-                        </ProtectedRoute>
-                      } 
-                    />
+                    <Route path="/users" element={<Users />} />
+                    <Route path="/profile" element={<Profile />} />
                   </Routes>
                 </AppLayout>
               </ProtectedRoute>

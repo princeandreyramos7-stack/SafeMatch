@@ -140,16 +140,16 @@ export default function DischargeReadinessModal({ mother: initialMother, newborn
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
-          <h2 className="text-2xl font-bold text-gray-900">Discharge Readiness Assessment</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition">
-            <X className="w-6 h-6 text-gray-600" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Discharge Readiness Assessment</h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0">
+            <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
           {/* Patient Selection */}
           {!initialMother && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -323,14 +323,14 @@ export default function DischargeReadinessModal({ mother: initialMother, newborn
                 {!showDecisionForm ? (
                   <button
                     onClick={() => setShowDecisionForm(true)}
-                    className="w-full px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-semibold"
+                    className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition font-semibold text-sm sm:text-base"
                   >
-                    <FileCheck className="w-5 h-5 inline mr-2" />
+                    <FileCheck className="w-4 h-4 sm:w-5 sm:h-5 inline mr-2" />
                     Make Discharge Decision
                   </button>
                 ) : (
                   <form onSubmit={handleSaveDecision} className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Discharge Decision</h3>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Discharge Decision</h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
@@ -409,17 +409,17 @@ export default function DischargeReadinessModal({ mother: initialMother, newborn
                       )}
                     </div>
 
-                    <div className="flex items-center justify-end gap-3 pt-4">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4">
                       <button
                         type="button"
                         onClick={() => setShowDecisionForm(false)}
-                        className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                        className="px-4 sm:px-6 py-2 text-sm sm:text-base text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition order-2 sm:order-1"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
+                        className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-primary text-white rounded-lg hover:bg-primary-dark transition order-1 sm:order-2"
                       >
                         Save Decision
                       </button>

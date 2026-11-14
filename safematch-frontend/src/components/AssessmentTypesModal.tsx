@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../lib/axios';
 import { X, Plus, Edit2, Trash2, CheckCircle2, XCircle } from 'lucide-react';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 interface AssessmentTypesModalProps {
   onClose: () => void;
@@ -11,6 +12,8 @@ export default function AssessmentTypesModal({ onClose, onSuccess }: AssessmentT
   const [assessmentTypes, setAssessmentTypes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingType, setDeletingType] = useState<any>(null);
   const [editingType, setEditingType] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -89,8 +92,6 @@ export default function AssessmentTypesModal({ onClose, onSuccess }: AssessmentT
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this assessment type?')) return;
-
     try {
       await axios.delete(`/assessment-types/${id}`);
       alert('Assessment type deleted successfully');
@@ -100,6 +101,11 @@ export default function AssessmentTypesModal({ onClose, onSuccess }: AssessmentT
       console.error('Error deleting assessment type:', error);
       alert(error.response?.data?.message || 'Failed to delete assessment type');
     }
+  };
+
+  const confirmDelete = (type: any) => {
+    setDeletingType(type);
+    setShowDeleteModal(true);
   };
 
   const handleToggleActive = async (id: number) => {
@@ -114,28 +120,29 @@ export default function AssessmentTypesModal({ onClose, onSuccess }: AssessmentT
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
-          <h2 className="text-2xl font-bold text-gray-900">Manage Assessment Types</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Manage Assessment Types</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition"
+            className="p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0"
           >
-            <X className="w-6 h-6 text-gray-600" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {!showForm ? (
             <>
               <div className="flex justify-end mb-4">
                 <button
                   onClick={handleCreate}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition text-sm sm:text-base"
                 >
-                  <Plus className="w-5 h-5" />
-                  Add Assessment Type
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="hidden sm:inline">Add Assessment Type</span>
+                  <span className="sm:hidden">Add Type</span>
                 </button>
               </div>
 
@@ -148,30 +155,30 @@ export default function AssessmentTypesModal({ onClose, onSuccess }: AssessmentT
                   {assessmentTypes.map((type) => (
                     <div
                       key={type.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg gap-3"
                     >
                       <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-semibold text-gray-900">{type.name}</h3>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900">{type.name}</h3>
                           {type.is_mandatory && (
-                            <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                            <span className="px-2 py-0.5 sm:py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                               Mandatory
                             </span>
                           )}
                           {type.is_active ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                               <CheckCircle2 className="w-3 h-3" />
                               Active
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
                               <XCircle className="w-3 h-3" />
                               Inactive
                             </span>
                           )}
                         </div>
                         {type.description && (
-                          <p className="text-sm text-gray-600 mt-1">{type.description}</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mt-1">{type.description}</p>
                         )}
                         {type.frequency_hours && (
                           <p className="text-xs text-gray-500 mt-1">
@@ -179,35 +186,35 @@ export default function AssessmentTypesModal({ onClose, onSuccess }: AssessmentT
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 self-end sm:self-auto">
                         <button
                           onClick={() => handleToggleActive(type.id)}
-                          className="p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition"
+                          className="p-1.5 sm:p-2 text-gray-600 hover:bg-gray-200 rounded-lg transition"
                           title={type.is_active ? 'Deactivate' : 'Activate'}
                         >
                           {type.is_active ? (
-                            <XCircle className="w-5 h-5" />
+                            <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                           ) : (
-                            <CheckCircle2 className="w-5 h-5" />
+                            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
                           )}
                         </button>
                         <button
                           onClick={() => handleEdit(type)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                          className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                         >
-                          <Edit2 className="w-5 h-5" />
+                          <Edit2 className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                         <button
-                          onClick={() => handleDelete(type.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          onClick={() => confirmDelete(type)}
+                          className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                       </div>
                     </div>
                   ))}
                   {assessmentTypes.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">No assessment types found</p>
+                    <p className="text-center text-gray-500 py-8 text-sm sm:text-base">No assessment types found</p>
                   )}
                 </div>
               )}
@@ -289,17 +296,17 @@ export default function AssessmentTypesModal({ onClose, onSuccess }: AssessmentT
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-6 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  className="px-4 sm:px-6 py-2 text-sm sm:text-base text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition order-2 sm:order-1"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
+                  className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-primary text-white rounded-lg hover:bg-primary-dark transition order-1 sm:order-2"
                 >
                   {editingType ? 'Update' : 'Create'}
                 </button>
@@ -308,6 +315,23 @@ export default function AssessmentTypesModal({ onClose, onSuccess }: AssessmentT
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deletingType && (
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeletingType(null);
+          }}
+          onConfirm={() => handleDelete(deletingType.id)}
+          title="Delete Assessment Type"
+          message="Are you sure you want to delete this assessment type?"
+          itemName={deletingType.name}
+          itemDetails={deletingType.description}
+          warningMessage="This type may be used in existing assessment records. Deleting it could affect historical data."
+        />
+      )}
     </div>
   );
 }

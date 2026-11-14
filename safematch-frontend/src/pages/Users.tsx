@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import axios from '../lib/axios';
 import { Plus, Search, Edit, Trash2, Power } from 'lucide-react';
 import UserForm from '../components/UserForm';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 interface User {
   id: number;
@@ -21,6 +22,8 @@ export default function Users() {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -52,15 +55,20 @@ export default function Users() {
   };
 
   const handleDelete = async (userId: number) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
-
     try {
       await axios.delete(`/users/${userId}`);
       toast.success('User deleted successfully');
+      setShowDeleteModal(false);
+      setDeletingUser(null);
       fetchUsers();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete user');
     }
+  };
+
+  const confirmDelete = (user: User) => {
+    setDeletingUser(user);
+    setShowDeleteModal(true);
   };
 
   const handleToggleStatus = async (userId: number) => {
@@ -105,27 +113,23 @@ export default function Users() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50/30 p-3 sm:p-6 space-y-4 sm:space-y-6">
-      {/* Header with Gradient */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl sm:rounded-2xl shadow-soft-lg p-4 sm:p-8 text-white">
-        <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-white/10 rounded-full -mr-16 sm:-mr-32 -mt-16 sm:-mt-32"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-48 sm:h-48 bg-white/10 rounded-full -ml-12 sm:-ml-24 -mb-12 sm:-mb-24"></div>
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-          <div>
-            <h1 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 animate-fade-in">User Management</h1>
-            <p className="text-white/90 text-sm sm:text-lg animate-slide-up">Manage system users and permissions</p>
-          </div>
-          <button
-            onClick={() => {
-              setEditingUser(null);
-              setShowForm(true);
-            }}
-            className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-white text-purple-600 rounded-lg sm:rounded-xl hover:bg-white/90 transition-all-smooth font-semibold shadow-lg hover-lift text-sm sm:text-base"
-          >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Add User</span>
-            <span className="sm:hidden">Add</span>
-          </button>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">User Management</h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage system users and permissions</p>
         </div>
+        <button
+          onClick={() => {
+            setEditingUser(null);
+            setShowForm(true);
+          }}
+          className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-primary text-white rounded-lg hover:bg-primary-700 transition-all-smooth font-semibold shadow-lg hover-lift text-sm sm:text-base"
+        >
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="hidden sm:inline">Add User</span>
+          <span className="sm:hidden">Add</span>
+        </button>
       </div>
 
       {/* Filters */}
@@ -220,7 +224,7 @@ export default function Users() {
                       {user.is_active ? 'Disable' : 'Enable'}
                     </button>
                     <button
-                      onClick={() => handleDelete(user.id)}
+                      onClick={() => confirmDelete(user)}
                       className="px-3 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -309,7 +313,7 @@ export default function Users() {
                             <Power className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(user.id)}
+                            onClick={() => confirmDelete(user)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all-smooth hover-lift"
                             title="Delete"
                           >
@@ -359,6 +363,23 @@ export default function Users() {
             setEditingUser(null);
           }}
           onSuccess={handleFormSuccess}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingUser && (
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeletingUser(null);
+          }}
+          onConfirm={() => handleDelete(deletingUser.id)}
+          title="Delete User"
+          message="Are you sure you want to delete this user?"
+          itemName={deletingUser.name}
+          itemDetails={deletingUser.email}
+          warningMessage="All data associated with this user will be permanently deleted."
         />
       )}
     </div>

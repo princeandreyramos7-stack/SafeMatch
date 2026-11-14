@@ -143,14 +143,10 @@ export default function ActivityLogs() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-50/30 p-3 sm:p-6 space-y-4 sm:space-y-6">
-      {/* Header with Gradient */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl sm:rounded-2xl shadow-soft-lg p-4 sm:p-8 text-white">
-        <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-white/10 rounded-full -mr-16 sm:-mr-32 -mt-16 sm:-mt-32"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 sm:w-48 sm:h-48 bg-white/10 rounded-full -ml-12 sm:-ml-24 -mb-12 sm:-mb-24"></div>
-        <div className="relative z-10">
-          <h1 className="text-2xl sm:text-4xl font-bold mb-1 sm:mb-2 animate-fade-in">Activity Logs</h1>
-          <p className="text-white/90 text-sm sm:text-lg animate-slide-up">System audit trail and user activities</p>
-        </div>
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Activity Logs</h1>
+        <p className="text-gray-600 mt-1 text-sm sm:text-base">System audit trail and user activities</p>
       </div>
 
       {/* Filters */}

@@ -5,12 +5,15 @@ import { Plus, Search, Heart, AlertTriangle, CheckCircle2, XCircle, Settings } f
 import { format } from 'date-fns';
 import AssessmentForm from '../components/AssessmentForm';
 import AssessmentTypesModal from '../components/AssessmentTypesModal';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 export default function MaternalAssessments() {
   const [assessments, setAssessments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showTypesModal, setShowTypesModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingAssessment, setDeletingAssessment] = useState<any>(null);
   const [editingAssessment, setEditingAssessment] = useState<any>(null);
   const [filters, setFilters] = useState({
     search: '',
@@ -64,8 +67,6 @@ export default function MaternalAssessments() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this assessment record?')) return;
-
     try {
       await axios.delete(`/maternal-assessments/${id}`);
       toast.success('Assessment deleted successfully');
@@ -75,6 +76,11 @@ export default function MaternalAssessments() {
       console.error('Error deleting assessment:', error);
       toast.error(error.response?.data?.message || 'Failed to delete assessment');
     }
+  };
+
+  const confirmDelete = (assessment: any) => {
+    setDeletingAssessment(assessment);
+    setShowDeleteModal(true);
   };
 
   const handleFormSuccess = () => {
@@ -305,7 +311,7 @@ export default function MaternalAssessments() {
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(assessment.id)}
+                          onClick={() => confirmDelete(assessment)}
                           className="text-red-600 hover:text-red-900"
                         >
                           Delete
@@ -364,6 +370,22 @@ export default function MaternalAssessments() {
             fetchAssessments();
             fetchStatistics();
           }}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingAssessment && (
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeletingAssessment(null);
+          }}
+          onConfirm={() => handleDelete(deletingAssessment.id)}
+          title="Delete Assessment Record"
+          message="Are you sure you want to delete this assessment record?"
+          itemName={deletingAssessment.assessment_type?.name || 'Assessment'}
+          itemDetails={`Mother: ${deletingAssessment.mother?.full_name || 'Unknown'}`}
         />
       )}
     </div>

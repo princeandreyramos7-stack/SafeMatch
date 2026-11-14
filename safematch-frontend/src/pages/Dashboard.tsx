@@ -252,7 +252,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2 border border-gray-200">
               <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
           </div>
@@ -275,7 +275,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2 border border-gray-200">
               <Baby className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
             </div>
           </div>
@@ -297,7 +297,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2 border border-gray-200">
               <QrCode className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
             </div>
           </div>
@@ -319,7 +319,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2 border border-gray-200">
               <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" />
             </div>
           </div>
@@ -341,7 +341,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2 border border-gray-200">
               <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
             </div>
           </div>
@@ -363,7 +363,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-teal-100 to-teal-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2 border border-gray-200">
               <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-teal-600" />
             </div>
           </div>
@@ -380,7 +380,7 @@ export default function Dashboard() {
               </p>
               <p className="text-xs text-gray-500 mt-1 sm:mt-2 font-medium">Generated & Active</p>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2 border border-gray-200">
               <QrCode className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
             </div>
           </div>
@@ -399,7 +399,7 @@ export default function Dashboard() {
                 of {statistics.system.total_users} total users
               </p>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-pink-100 to-pink-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-soft flex-shrink-0 ml-2 border border-gray-200">
               <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600" />
             </div>
           </div>
@@ -619,7 +619,7 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-gradient-to-br from-primary-50 to-primary-100/50 rounded-xl sm:rounded-2xl shadow-soft-lg p-4 sm:p-6 border border-primary-200 animate-fade-in">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-soft-lg p-4 sm:p-6 border border-gray-200 animate-fade-in">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
             <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
             Quick Actions

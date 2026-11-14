@@ -13,11 +13,10 @@ export default function ScreeningForm({ screening, onClose, onSuccess }: Screeni
   const [formData, setFormData] = useState({
     newborn_id: screening?.newborn_id || '',
     screening_type_id: screening?.screening_type_id || '',
-    performed_date: screening?.performed_date || new Date().toISOString().split('T')[0],
-    status: screening?.status || 'performed',
+    performed_date: screening?.performed_date ? new Date(screening.performed_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    status: screening?.status || 'completed',
     result: screening?.result || 'pending',
-    findings: screening?.findings || '',
-    notes: screening?.notes || '',
+    remarks: screening?.remarks || '',
   });
   const [newborns, setNewborns] = useState<any[]>([]);
   const [screeningTypes, setScreeningTypes] = useState<any[]>([]);
@@ -75,21 +74,21 @@ export default function ScreeningForm({ screening, onClose, onSuccess }: Screeni
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
-          <h2 className="text-2xl font-bold text-gray-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
             {screening ? 'Edit Screening' : 'Record New Screening'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition"
+            className="p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0"
           >
-            <X className="w-6 h-6 text-gray-600" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Newborn Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -167,8 +166,10 @@ export default function ScreeningForm({ screening, onClose, onSuccess }: Screeni
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
             >
               <option value="pending">Pending</option>
-              <option value="performed">Performed</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="in_progress">In Progress</option>
               <option value="completed">Completed</option>
+              <option value="not_applicable">Not Applicable</option>
               <option value="requires_followup">Requires Followup</option>
             </select>
             {errors.status && (
@@ -196,53 +197,36 @@ export default function ScreeningForm({ screening, onClose, onSuccess }: Screeni
             )}
           </div>
 
-          {/* Findings */}
+          {/* Findings/Remarks */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Findings
+              Findings & Remarks
             </label>
             <textarea
-              value={formData.findings}
-              onChange={(e) => setFormData({ ...formData, findings: e.target.value })}
+              value={formData.remarks}
+              onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
               rows={4}
-              placeholder="Enter screening findings and observations..."
+              placeholder="Enter screening findings, observations, and remarks..."
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
             />
-            {errors.findings && (
-              <p className="mt-1 text-sm text-red-600">{errors.findings[0]}</p>
-            )}
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Additional Notes
-            </label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-              placeholder="Any additional notes or comments..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
-            {errors.notes && (
-              <p className="mt-1 text-sm text-red-600">{errors.notes[0]}</p>
+            {errors.remarks && (
+              <p className="mt-1 text-sm text-red-600">{errors.remarks[0]}</p>
             )}
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-6 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="px-4 sm:px-6 py-2 text-sm sm:text-base text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition order-2 sm:order-1"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-primary text-white rounded-lg hover:bg-primary-dark transition disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
             >
               {loading ? 'Saving...' : screening ? 'Update Screening' : 'Record Screening'}
             </button>

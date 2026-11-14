@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import axios from '../lib/axios';
-import { Plus, Search, Filter, FileText, CheckCircle2, Clock, AlertTriangle, XCircle, Settings } from 'lucide-react';
+import { Plus, Search, Filter, FileText, CheckCircle2, Clock, AlertTriangle, XCircle, Settings, Edit2, Eye, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import ScreeningForm from '../components/ScreeningForm';
 import ScreeningTypesModal from '../components/ScreeningTypesModal';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 export default function Screenings() {
   const [screenings, setScreenings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showTypesModal, setShowTypesModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingScreening, setDeletingScreening] = useState<any>(null);
   const [editingScreening, setEditingScreening] = useState<any>(null);
   const [filters, setFilters] = useState({
     search: '',
@@ -66,8 +69,6 @@ export default function Screenings() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this screening record?')) return;
-
     try {
       await axios.delete(`/screenings/${id}`);
       toast.success('Screening deleted successfully');
@@ -77,6 +78,11 @@ export default function Screenings() {
       console.error('Error deleting screening:', error);
       toast.error(error.response?.data?.message || 'Failed to delete screening');
     }
+  };
+
+  const confirmDelete = (screening: any) => {
+    setDeletingScreening(screening);
+    setShowDeleteModal(true);
   };
 
   const handleFormSuccess = () => {
@@ -126,26 +132,27 @@ export default function Screenings() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Newborn Screenings</h1>
-          <p className="text-gray-600 mt-1">Track and manage newborn screening procedures</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Newborn Screenings</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Track and manage newborn screening procedures</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
             onClick={() => setShowTypesModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition justify-center text-sm sm:text-base order-2 sm:order-1"
           >
-            <Settings className="w-5 h-5" />
-            Manage Types
+            <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="hidden sm:inline">Manage Types</span>
+            <span className="sm:hidden">Types</span>
           </button>
           <button
             onClick={handleCreate}
-            className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition"
+            className="flex items-center gap-2 px-4 sm:px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition justify-center text-sm sm:text-base order-1 sm:order-2"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
             Record Screening
           </button>
         </div>
@@ -322,21 +329,32 @@ export default function Screenings() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900">
-                        {screening.performed_by?.name || 'Unknown'}
+                        {screening.assigned_personnel?.name || 'Unknown'}
                       </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium space-x-2">
-                        <button
-                          onClick={() => handleEdit(screening)}
-                          className="text-primary hover:text-primary-dark"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(screening.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          Delete
-                        </button>
+                      <td className="px-6 py-4 text-right text-sm font-medium">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleEdit(screening)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => alert(`View details for screening #${screening.id}`)}
+                            className="p-2 text-primary hover:bg-teal-50 rounded-lg transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => confirmDelete(screening)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -391,6 +409,22 @@ export default function Screenings() {
             fetchScreenings();
             fetchStatistics();
           }}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingScreening && (
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeletingScreening(null);
+          }}
+          onConfirm={() => handleDelete(deletingScreening.id)}
+          title="Delete Screening Record"
+          message="Are you sure you want to delete this screening record?"
+          itemName={deletingScreening.screening_type?.name || 'Screening'}
+          itemDetails={`Newborn: ${deletingScreening.newborn?.full_name || 'Unnamed'}`}
         />
       )}
     </div>

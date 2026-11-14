@@ -28,7 +28,7 @@ export default function UserForm({ user, onClose, onSuccess }: UserFormProps) {
         name: user.name || '',
         email: user.email || '',
         password: '',
-        role: user.role || 'healthcare_personnel',
+        role: 'healthcare_personnel', // Always healthcare_personnel
         contact_number: user.contact_number || '',
         position: user.position || '',
         is_active: user.is_active ?? true,
@@ -38,18 +38,72 @@ export default function UserForm({ user, onClose, onSuccess }: UserFormProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-    }));
+    
+    // Special handling for contact number - only allow digits
+    if (name === 'contact_number') {
+      const digitsOnly = value.replace(/\D/g, '');
+      setFormData((prev) => ({
+        ...prev,
+        [name]: digitsOnly.slice(0, 11), // Max 11 digits
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+      }));
+    }
+    
     // Clear error for this field
     if (errors[name]) {
       setErrors((prev: any) => ({ ...prev, [name]: null }));
     }
   };
 
+  const validateForm = () => {
+    const newErrors: any = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = ['Name is required'];
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = ['Email is required'];
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = ['Please enter a valid email address'];
+    }
+
+    if (!user && !formData.password) {
+      newErrors.password = ['Password is required'];
+    } else if (formData.password && formData.password.length < 8) {
+      newErrors.password = ['Password must be at least 8 characters'];
+    }
+
+    if (!formData.contact_number.trim()) {
+      newErrors.contact_number = ['Contact number is required'];
+    } else if (formData.contact_number.length !== 11) {
+      newErrors.contact_number = ['Contact number must be exactly 11 digits'];
+    } else if (!/^\d{11}$/.test(formData.contact_number)) {
+      newErrors.contact_number = ['Contact number must contain only digits'];
+    }
+
+    if (!formData.position.trim()) {
+      newErrors.position = ['Position is required'];
+    }
+
+    return newErrors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error('Please fix the validation errors');
+      return;
+    }
+
     setErrors({});
     setLoading(true);
 
@@ -82,21 +136,21 @@ export default function UserForm({ user, onClose, onSuccess }: UserFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
             {user ? 'Edit User' : 'Add New User'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition"
+            className="p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0"
           >
-            <X className="w-6 h-6 text-gray-600" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Name */}
             <div>
@@ -155,64 +209,56 @@ export default function UserForm({ user, onClose, onSuccess }: UserFormProps) {
                 value={formData.password}
                 onChange={handleChange}
                 required={!user}
+                minLength={8}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none ${
                   errors.password ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder={user ? 'Enter new password (optional)' : 'Enter password'}
+                placeholder={user ? 'Enter new password (optional)' : 'Enter password (min 8 characters)'}
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-500">{errors.password[0]}</p>
               )}
             </div>
 
-            {/* Role */}
+            {/* Role - Hidden, always Healthcare Personnel */}
             <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Role <span className="text-red-500">*</span>
               </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                required
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none ${
-                  errors.role ? 'border-red-500' : 'border-gray-300'
-                }`}
-              >
-                <option value="healthcare_personnel">Healthcare Personnel</option>
-                <option value="administrator">Administrator</option>
-              </select>
-              {errors.role && (
-                <p className="mt-1 text-sm text-red-500">{errors.role[0]}</p>
-              )}
+              <div className="w-full px-4 py-2 border border-gray-300 bg-gray-50 rounded-lg text-gray-700">
+                Healthcare Personnel
+              </div>
+              <p className="mt-1 text-xs text-gray-500">All users are Healthcare Personnel</p>
             </div>
 
             {/* Contact Number */}
             <div>
               <label htmlFor="contact_number" className="block text-sm font-medium text-gray-700 mb-2">
-                Contact Number
+                Contact Number <span className="text-red-500">*</span>
               </label>
               <input
-                type="text"
+                type="tel"
                 id="contact_number"
                 name="contact_number"
                 value={formData.contact_number}
                 onChange={handleChange}
+                required
+                maxLength={11}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none ${
                   errors.contact_number ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="Enter contact number"
+                placeholder="09123456789 (11 digits)"
               />
               {errors.contact_number && (
                 <p className="mt-1 text-sm text-red-500">{errors.contact_number[0]}</p>
               )}
+              <p className="mt-1 text-xs text-gray-500">Must be exactly 11 digits</p>
             </div>
 
             {/* Position */}
             <div>
               <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-2">
-                Position
+                Position <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -220,6 +266,7 @@ export default function UserForm({ user, onClose, onSuccess }: UserFormProps) {
                 name="position"
                 value={formData.position}
                 onChange={handleChange}
+                required
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none ${
                   errors.position ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -247,18 +294,18 @@ export default function UserForm({ user, onClose, onSuccess }: UserFormProps) {
           </div>
 
           {/* Form Actions */}
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-6 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="px-4 sm:px-6 py-2 text-sm sm:text-base text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition order-2 sm:order-1"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-primary text-white rounded-lg hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-2"
             >
               {loading ? 'Saving...' : user ? 'Update User' : 'Create User'}
             </button>

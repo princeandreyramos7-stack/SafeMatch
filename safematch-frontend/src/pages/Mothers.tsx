@@ -4,6 +4,7 @@ import axios from '../lib/axios';
 import { Plus, Search, Edit, Trash2, Eye, QrCode } from 'lucide-react';
 import MotherForm from '../components/MotherForm';
 import MotherDetails from '../components/MotherDetails';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 interface Mother {
   id: number;
@@ -34,6 +35,8 @@ export default function Mothers() {
   const [statusFilter, setStatusFilter] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingMother, setDeletingMother] = useState<Mother | null>(null);
   const [editingMother, setEditingMother] = useState<Mother | null>(null);
   const [viewingMother, setViewingMother] = useState<Mother | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,8 +69,6 @@ export default function Mothers() {
   };
 
   const handleDelete = async (motherId: number) => {
-    if (!confirm('Are you sure you want to delete this mother record?')) return;
-
     try {
       await axios.delete(`/mothers/${motherId}`);
       toast.success('Mother record deleted successfully');
@@ -75,6 +76,11 @@ export default function Mothers() {
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete mother record');
     }
+  };
+
+  const confirmDelete = (mother: Mother) => {
+    setDeletingMother(mother);
+    setShowDeleteModal(true);
   };
 
   const handleFormSuccess = () => {
@@ -260,7 +266,7 @@ export default function Mothers() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(mother.id)}
+                          onClick={() => confirmDelete(mother)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
                           title="Delete"
                         >
@@ -316,6 +322,23 @@ export default function Mothers() {
         <MotherDetails
           motherId={viewingMother.id}
           onClose={handleDetailsClose}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingMother && (
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeletingMother(null);
+          }}
+          onConfirm={() => handleDelete(deletingMother.id)}
+          title="Delete Mother Record"
+          message="Are you sure you want to delete this mother record?"
+          itemName={deletingMother.full_name}
+          itemDetails={`ID: ${deletingMother.mother_id}`}
+          warningMessage="This will permanently delete all associated data including newborns, screenings, and assessments."
         />
       )}
     </div>

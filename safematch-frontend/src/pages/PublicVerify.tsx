@@ -80,7 +80,7 @@ export default function PublicVerify() {
           ) : result?.success ? (
             <div className="text-center py-8">
               <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-6" />
-              <h2 className="text-3xl font-bold text-green-600 mb-6">✓ VERIFIED</h2>
+              <h2 className="text-3xl font-bold text-green-600 mb-6">VERIFIED</h2>
               
               <div className="bg-green-50 rounded-xl p-6 text-left space-y-4 mb-8">
                 <div>
