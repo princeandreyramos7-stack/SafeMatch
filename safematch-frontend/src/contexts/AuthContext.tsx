@@ -9,6 +9,7 @@ interface User {
   contact_number?: string;
   position?: string;
   is_active: boolean;
+  profile_picture?: string;
 }
 
 interface AuthContextType {
@@ -116,8 +117,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUser = (userData: User) => {
+    console.log('AuthContext updateUser called with:', userData);
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
+    console.log('User updated in localStorage');
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new Event('userUpdated'));
   };
 
   const value = {

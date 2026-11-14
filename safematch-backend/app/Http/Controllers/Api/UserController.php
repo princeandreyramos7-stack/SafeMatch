@@ -244,6 +244,9 @@ class UserController extends Controller
 
         $user->update($validated);
 
+        // Refresh the user model to get updated data
+        $user->refresh();
+
         // Log activity
         activity()
             ->causedBy($user)
@@ -252,7 +255,7 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'Profile updated successfully',
-            'user' => $user->fresh(),
+            'user' => $user,
         ]);
     }
 }

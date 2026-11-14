@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import axios from '../lib/axios';
+import { getStorageUrl } from '../lib/storage';
 import { User, Mail, Phone, Briefcase, Lock, Save, Camera, Upload } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -35,7 +36,7 @@ export default function Profile() {
       
       // Set profile picture if exists
       if (authUser.profile_picture) {
-        setProfilePicturePreview(`${axios.defaults.baseURL}/storage/${authUser.profile_picture}`);
+        setProfilePicturePreview(getStorageUrl(authUser.profile_picture));
       }
     }
   }, [authUser]);
@@ -176,14 +177,20 @@ export default function Profile() {
         },
       });
       
+      console.log('Profile update response:', response.data);
+      
       // Update local storage and AuthContext with new user data
       if (response.data.user) {
+        console.log('Updating user with data:', response.data.user);
+        
         // Update AuthContext which also updates localStorage
         updateUser(response.data.user);
         
         // Update profile picture preview
         if (response.data.user.profile_picture) {
-          setProfilePicturePreview(`${axios.defaults.baseURL}/storage/${response.data.user.profile_picture}`);
+          const newImageUrl = getStorageUrl(response.data.user.profile_picture);
+          console.log('Setting new profile picture URL:', newImageUrl);
+          setProfilePicturePreview(newImageUrl);
         }
       }
 

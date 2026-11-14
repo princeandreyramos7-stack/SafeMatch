@@ -1,4 +1,5 @@
 import * as React from "react"
+import { getStorageUrl } from "../lib/storage"
 import {
   Home,
   Users,
@@ -85,7 +86,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   React.useEffect(() => {
     const userData = localStorage.getItem("user")
     if (userData) {
-      setUser(JSON.parse(userData))
+      const parsedUser = JSON.parse(userData)
+      console.log('Sidebar loaded user from localStorage:', parsedUser)
+      console.log('Profile picture path:', parsedUser.profile_picture)
+      if (parsedUser.profile_picture) {
+        console.log('Profile picture URL will be:', getStorageUrl(parsedUser.profile_picture))
+      }
+      setUser(parsedUser)
+    }
+
+    // Listen for storage changes (when user updates profile)
+    const handleStorageChange = () => {
+      const updatedUserData = localStorage.getItem("user")
+      if (updatedUserData) {
+        const parsedUser = JSON.parse(updatedUserData)
+        console.log('Sidebar detected user update:', parsedUser)
+        setUser(parsedUser)
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    
+    // Also listen for custom event when profile is updated in same tab
+    window.addEventListener('userUpdated', handleStorageChange)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('userUpdated', handleStorageChange)
     }
   }, [])
 
@@ -147,9 +174,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   size="lg"
                   className="data-[state=open]:bg-teal-800 data-[state=open]:text-white hover:bg-teal-800 hover:text-white"
                 >
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-teal-600 text-white">
-                    <User2 className="size-4" />
-                  </div>
+                  {user?.profile_picture ? (
+                    <img
+                      src={getStorageUrl(user.profile_picture)}
+                      alt="Profile"
+                      className="flex aspect-square size-8 rounded-lg object-cover border border-teal-500"
+                    />
+                  ) : (
+                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-teal-600 text-white">
+                      <User2 className="size-4" />
+                    </div>
+                  )}
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold text-teal-100">
                       {user?.name || "User"}
