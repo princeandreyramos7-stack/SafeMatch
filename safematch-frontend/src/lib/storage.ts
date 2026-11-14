@@ -2,7 +2,7 @@ import axios from './axios';
 
 /**
  * Get the full URL for a storage file
- * @param path - The storage path from the database (e.g., "profile_pictures/abc.jpg")
+ * @param path - The storage path from the database (e.g., "profile_pictures/abc.jpg" or "uploads/profile_pictures/abc.jpg")
  * @returns Full URL to the storage file
  */
 export function getStorageUrl(path: string | null | undefined): string {
@@ -14,5 +14,11 @@ export function getStorageUrl(path: string | null | undefined): string {
   // Ensure path doesn't start with slash
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   
+  // If path starts with 'uploads/', it's in public folder (Hostinger-friendly)
+  if (cleanPath.startsWith('uploads/')) {
+    return `${baseURL}/${cleanPath}`;
+  }
+  
+  // Otherwise it's in storage folder (local development)
   return `${baseURL}/storage/${cleanPath}`;
 }

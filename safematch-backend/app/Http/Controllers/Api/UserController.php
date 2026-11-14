@@ -230,12 +230,27 @@ class UserController extends Controller
         if ($request->hasFile('profile_picture')) {
             // Delete old profile picture if exists
             if ($user->profile_picture) {
-                \Storage::disk('public')->delete($user->profile_picture);
+                $oldPath = public_path($user->profile_picture);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
             }
 
-            // Store new profile picture
-            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
-            $validated['profile_picture'] = $path;
+            // Create directory if it doesn't exist
+            $uploadPath = public_path('uploads/profile_pictures');
+            if (!file_exists($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            // Generate unique filename
+            $file = $request->file('profile_picture');
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            
+            // Move file to public/uploads/profile_pictures
+            $file->move($uploadPath, $fileName);
+            
+            // Store relative path in database
+            $validated['profile_picture'] = 'uploads/profile_pictures/' . $fileName;
         }
 
         // Remove password-related fields that shouldn't be updated directly
